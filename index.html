@@ -3,265 +3,324 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>3D AI Generator</title>
-  <meta name="description" content="Trasforma le tue idee in modelli 3D con AI.">
+
+  <title>AI 3D Generator</title>
+
+  <!-- Gradio Client -->
+  <script type="module">
+    import { Client, handle_file } from "https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js";
+
+    window.GradioClient = { Client, handle_file };
+  </script>
+
+  <!-- Model Viewer -->
+  <script type="module"
+    src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js">
+  </script>
+
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
-      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #07080d;
-      color: #f5f7ff;
+      font-family: Arial, sans-serif;
+      background: #0b1020;
+      color: white;
       min-height: 100vh;
     }
-    .wrap { width: min(1180px, 92%); margin: 0 auto; }
+
     header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 24px 0;
+      padding: 25px;
+      text-align: center;
+      background: #111936;
+      border-bottom: 1px solid #29345c;
     }
-    .logo { font-weight: 800; font-size: 21px; letter-spacing: -.5px; }
-    .logo span { color: #8b7cff; }
-    .badge {
-      padding: 8px 12px; border: 1px solid #272a38; border-radius: 999px;
-      color: #aeb4c7; font-size: 13px; background: #0d0f17;
+
+    header h1 {
+      margin: 0;
+      font-size: 32px;
     }
-    .hero { text-align: center; padding: 58px 0 32px; }
-    h1 { font-size: clamp(40px, 7vw, 76px); line-height: .98; margin: 0 0 20px; letter-spacing: -3px; }
-    .gradient { background: linear-gradient(90deg,#fff,#a9a0ff,#70d8ff); -webkit-background-clip:text; color:transparent; }
-    .subtitle { color: #9da4b8; font-size: 18px; max-width: 650px; margin: 0 auto; line-height: 1.6; }
-    .panel {
-      margin-top: 38px; background: #0d0f17; border: 1px solid #252938;
-      border-radius: 24px; padding: 16px; box-shadow: 0 20px 70px rgba(0,0,0,.35);
+
+    header p {
+      margin: 10px 0 0;
+      color: #aeb9d8;
     }
-    textarea {
-      width: 100%; min-height: 115px; resize: vertical; border: 0; outline: 0;
-      border-radius: 17px; background: #141722; color: #fff; padding: 18px;
-      font: inherit; font-size: 16px; line-height: 1.5;
+
+    main {
+      width: 90%;
+      max-width: 900px;
+      margin: 40px auto;
     }
-    .actions { display:flex; gap:12px; margin-top:12px; flex-wrap:wrap; }
-    button {
-      border: 0; border-radius: 13px; padding: 13px 18px; font: inherit;
-      font-weight: 700; cursor: pointer; transition: .2s;
+
+    .card {
+      background: #121a32;
+      border: 1px solid #29345c;
+      border-radius: 18px;
+      padding: 25px;
+      box-shadow: 0 15px 40px rgba(0,0,0,.25);
     }
-    .primary { background: #fff; color:#08090e; flex:1; min-width:180px; }
-    .primary:hover { transform: translateY(-1px); background:#e7e5ff; }
-    .secondary { background:#191c28; color:#dfe3f1; border:1px solid #2b2f40; }
-    .secondary:hover { background:#202435; }
-    .status { min-height:24px; color:#969db2; font-size:14px; padding:10px 4px 0; text-align:left; }
-    .viewer {
-      margin-top:18px; height:520px; border-radius:20px; overflow:hidden;
-      background: radial-gradient(circle at 50% 35%, #1d2132 0, #0a0c12 55%, #06070b 100%);
-      border:1px solid #252938; position:relative;
+
+    h2 {
+      margin-top: 0;
     }
-    canvas { display:block; width:100%; height:100%; }
-    .hint {
-      position:absolute; left:16px; bottom:14px; color:#777f96; font-size:12px;
-      background:rgba(5,6,10,.65); padding:8px 10px; border-radius:10px;
+
+    .upload-area {
+      border: 2px dashed #536aa8;
+      border-radius: 15px;
+      padding: 35px 20px;
+      text-align: center;
+      margin: 20px 0;
+      cursor: pointer;
     }
-    .features { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:18px 0 70px; }
-    .card { padding:20px; background:#0d0f17; border:1px solid #252938; border-radius:18px; }
-    .card b { display:block; margin-bottom:8px; }
-    .card p { color:#8f96aa; margin:0; line-height:1.5; font-size:14px; }
-    footer { color:#62697b; font-size:12px; text-align:center; padding:0 0 35px; }
-    @media (max-width: 760px) {
-      .features { grid-template-columns:1fr; }
-      .viewer { height:420px; }
-      h1 { letter-spacing:-2px; }
+
+    .upload-area:hover {
+      background: #182342;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .button {
+      width: 100%;
+      border: none;
+      border-radius: 12px;
+      padding: 15px;
+      font-size: 17px;
+      font-weight: bold;
+      cursor: pointer;
+      background: #5b7cfa;
+      color: white;
+      margin-top: 10px;
+    }
+
+    .button:hover {
+      background: #4968dd;
+    }
+
+    .button:disabled {
+      background: #39435f;
+      cursor: not-allowed;
+    }
+
+    #preview {
+      display: none;
+      max-width: 100%;
+      max-height: 300px;
+      margin: 20px auto;
+      border-radius: 12px;
+    }
+
+    #status {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 10px;
+      background: #0c1328;
+      color: #b9c5e6;
+      text-align: center;
+      min-height: 50px;
+    }
+
+    #result {
+      display: none;
+      margin-top: 30px;
+    }
+
+    model-viewer {
+      width: 100%;
+      height: 500px;
+      background: #080d1b;
+      border-radius: 15px;
+    }
+
+    .download {
+      display: block;
+      text-align: center;
+      text-decoration: none;
+      background: #20a464;
+      color: white;
+      padding: 14px;
+      border-radius: 12px;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    .small {
+      color: #8996ba;
+      font-size: 13px;
+      margin-top: 15px;
+      line-height: 1.5;
     }
   </style>
 </head>
+
 <body>
-  <div class="wrap">
-    <header>
-      <div class="logo">3D <span>AI</span></div>
-      <div class="badge">Prototype • gratuito</div>
-    </header>
 
-    <main>
-      <section class="hero">
-        <h1>La tua idea.<br><span class="gradient">In 3D.</span></h1>
-        <p class="subtitle">
-          Scrivi ciò che vuoi creare. Questa prima versione è una demo del sito:
-          il prossimo passo sarà collegare un vero modello di generazione 3D AI.
-        </p>
+<header>
+  <h1>🤖 AI 3D Generator</h1>
+  <p>Trasforma un'immagine in un modello 3D</p>
+</header>
 
-        <div class="panel">
-          <textarea id="prompt" placeholder="Esempio: un robot futuristico con armatura bianca, dettagli blu e grandi spalle">Un robot futuristico con armatura bianca e dettagli blu</textarea>
-          <div class="actions">
-            <button class="primary" id="generate">✨ Genera modello 3D</button>
-            <button class="secondary" id="reset">↺ Ripristina</button>
-            <button class="secondary" id="download">↓ Scarica</button>
-          </div>
-          <div class="status" id="status">Demo pronta. Trascina il mouse sul modello per ruotarlo.</div>
-        </div>
+<main>
 
-        <div class="viewer" id="viewer">
-          <div class="hint">Mouse: ruota • Rotellina: zoom</div>
-        </div>
-      </section>
+  <div class="card">
 
-      <section class="features">
-        <div class="card"><b>✨ Prompt → 3D</b><p>In futuro il prompt verrà inviato a un vero modello AI 3D.</p></div>
-        <div class="card"><b>🖱️ Visualizzatore</b><p>Il modello può essere ruotato e ingrandito direttamente nel browser.</p></div>
-        <div class="card"><b>📦 Download</b><p>La versione completa permetterà di scaricare il modello generato.</p></div>
-      </section>
-    </main>
-    <footer>3D AI Generator — primo prototipo</footer>
+    <h2>Genera il tuo modello 3D</h2>
+
+    <p>
+      Carica un'immagine di un oggetto e prova a trasformarla
+      automaticamente in un modello 3D.
+    </p>
+
+    <label class="upload-area" for="imageInput">
+      <strong>📷 Clicca qui per scegliere un'immagine</strong>
+      <br><br>
+      PNG, JPG o WEBP
+    </label>
+
+    <input
+      id="imageInput"
+      type="file"
+      accept="image/png,image/jpeg,image/webp"
+    >
+
+    <img id="preview" alt="Anteprima">
+
+    <button id="generateButton" class="button" disabled>
+      🚀 Genera modello 3D
+    </button>
+
+    <div id="status">
+      Seleziona un'immagine per iniziare.
+    </div>
+
+    <div id="result">
+
+      <h2>🎉 Modello 3D</h2>
+
+      <model-viewer
+        id="viewer"
+        camera-controls
+        auto-rotate
+        shadow-intensity="1"
+        exposure="1">
+      </model-viewer>
+
+      <a
+        id="downloadButton"
+        class="download"
+        download="modello-3d.glb">
+        ⬇️ Scarica modello 3D
+      </a>
+
+    </div>
+
+    <p class="small">
+      Nota: questa è una versione di prova. Il modello 3D viene generato
+      tramite il servizio TripoSR di Hugging Face.
+    </p>
+
   </div>
 
-  <script type="importmap">
-  {
-    "imports": {
-      "three": "https://unpkg.com/three@0.180.0/build/three.module.js",
-      "three/addons/": "https://unpkg.com/three@0.180.0/examples/jsm/"
-    }
-  }
-  </script>
+</main>
 
-  <script type="module">
-    import * as THREE from "three";
-    import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+<script type="module">
 
-    const viewer = document.getElementById("viewer");
-    const status = document.getElementById("status");
-    const prompt = document.getElementById("prompt");
-    const generate = document.getElementById("generate");
-    const reset = document.getElementById("reset");
-    const download = document.getElementById("download");
+  const imageInput = document.getElementById("imageInput");
+  const preview = document.getElementById("preview");
+  const generateButton = document.getElementById("generateButton");
+  const status = document.getElementById("status");
+  const result = document.getElementById("result");
+  const viewer = document.getElementById("viewer");
+  const downloadButton = document.getElementById("downloadButton");
 
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x080a10);
+  let selectedFile = null;
 
-    const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
-    camera.position.set(3.5, 2.5, 5.5);
+  imageInput.addEventListener("change", () => {
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(viewer.clientWidth, viewer.clientHeight);
-    viewer.appendChild(renderer.domElement);
+    const file = imageInput.files[0];
 
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.target.set(0, 1.3, 0);
-
-    scene.add(new THREE.HemisphereLight(0xcdd6ff, 0x15151d, 2.2));
-    const key = new THREE.DirectionalLight(0xffffff, 3);
-    key.position.set(4, 6, 5);
-    scene.add(key);
-    const rim = new THREE.PointLight(0x7777ff, 35, 12);
-    rim.position.set(-4, 2, -3);
-    scene.add(rim);
-
-    const grid = new THREE.GridHelper(12, 24, 0x303449, 0x171a25);
-    grid.position.y = -0.01;
-    scene.add(grid);
-
-    let model = new THREE.Group();
-    scene.add(model);
-
-    function material(color, metalness=0.35, roughness=0.28) {
-      return new THREE.MeshStandardMaterial({ color, metalness, roughness });
+    if (!file) {
+      return;
     }
 
-    function buildDemoModel() {
-      model.clear();
+    selectedFile = file;
 
-      const bodyMat = material(0xdfe5f2, 0.65, 0.22);
-      const darkMat = material(0x20283a, 0.7, 0.25);
-      const blueMat = material(0x4c8dff, 0.6, 0.2);
+    preview.src = URL.createObjectURL(file);
+    preview.style.display = "block";
 
-      const body = new THREE.Mesh(new THREE.BoxGeometry(1.45, 1.8, 0.9), bodyMat);
-      body.position.y = 1.45;
-      body.scale.set(1, 1, .82);
-      model.add(body);
+    generateButton.disabled = false;
 
-      const chest = new THREE.Mesh(new THREE.BoxGeometry(1.1, .65, .98), blueMat);
-      chest.position.set(0, 1.7, .04);
-      model.add(chest);
+    status.innerHTML =
+      "✅ Immagine caricata. Premi <strong>Genera modello 3D</strong>.";
 
-      const head = new THREE.Mesh(new THREE.SphereGeometry(.62, 32, 24), darkMat);
-      head.position.y = 2.8;
-      head.scale.set(1, .9, .9);
-      model.add(head);
+    result.style.display = "none";
+  });
 
-      const visor = new THREE.Mesh(new THREE.BoxGeometry(.75, .18, .12), blueMat);
-      visor.position.set(0, 2.82, -.55);
-      model.add(visor);
 
-      for (const side of [-1, 1]) {
-        const shoulder = new THREE.Mesh(new THREE.SphereGeometry(.42, 24, 18), bodyMat);
-        shoulder.position.set(side * 1.02, 2.02, 0);
-        shoulder.scale.set(1.2, .75, 1);
-        model.add(shoulder);
+  generateButton.addEventListener("click", async () => {
 
-        const arm = new THREE.Mesh(new THREE.CapsuleGeometry(.24, 1.05, 8, 16), darkMat);
-        arm.position.set(side * 1.12, 1.15, 0);
-        model.add(arm);
-
-        const hand = new THREE.Mesh(new THREE.SphereGeometry(.3, 20, 16), blueMat);
-        hand.position.set(side * 1.12, .43, 0);
-        model.add(hand);
-
-        const leg = new THREE.Mesh(new THREE.CapsuleGeometry(.27, 1.15, 8, 16), darkMat);
-        leg.position.set(side * .42, -.05 + .45, 0);
-        model.add(leg);
-
-        const foot = new THREE.Mesh(new THREE.BoxGeometry(.55, .28, .9), bodyMat);
-        foot.position.set(side * .42, .12, -.16);
-        model.add(foot);
-      }
-
-      model.position.y = .05;
+    if (!selectedFile) {
+      return;
     }
 
-    buildDemoModel();
+    generateButton.disabled = true;
 
-    function resize() {
-      const w = viewer.clientWidth, h = viewer.clientHeight;
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-      renderer.setSize(w, h);
+    status.innerHTML =
+      "⏳ Connessione a TripoSR...<br>La generazione potrebbe richiedere alcuni minuti.";
+
+    result.style.display = "none";
+
+    try {
+
+      const { Client, handle_file } = window.GradioClient;
+
+      /*
+       * Ci colleghiamo allo Space pubblico ufficiale di TripoSR.
+       */
+      const app = await Client.connect("stabilityai/TripoSR");
+
+      status.innerHTML =
+        "⏳ Immagine inviata a TripoSR...<br>Attendi la generazione del modello.";
+
+      /*
+       * Recuperiamo automaticamente le informazioni sulle API.
+       * Questo ci permette di controllare gli endpoint disponibili.
+       */
+      const apiInfo = await app.view_api();
+
+      console.log("TripoSR API:", apiInfo);
+
+      /*
+       * Per ora mostriamo le informazioni nel riquadro.
+       * Nel prossimo passaggio collegheremo l'endpoint di generazione
+       * esatto restituito dallo Space.
+       */
+      status.innerHTML =
+        "✅ Connessione a TripoSR riuscita!<br><br>" +
+        "La pagina ha trovato correttamente le API del modello.<br>" +
+        "Controlla la console del browser per i dettagli.";
+
+      generateButton.disabled = false;
+
+    } catch (error) {
+
+      console.error(error);
+
+      status.innerHTML =
+        "❌ Si è verificato un errore.<br><br>" +
+        "<small>" +
+        (error.message || error) +
+        "</small>";
+
+      generateButton.disabled = false;
     }
-    window.addEventListener("resize", resize);
 
-    generate.addEventListener("click", () => {
-      const text = prompt.value.trim();
-      if (!text) {
-        status.textContent = "Scrivi prima una descrizione.";
-        return;
-      }
-      status.textContent = "✨ Demo: elaborazione del prompt…";
-      generate.disabled = true;
-      setTimeout(() => {
-        buildDemoModel();
-        status.textContent = "Modello demo generato. Nel prossimo passaggio collegheremo la vera AI 3D.";
-        generate.disabled = false;
-      }, 1200);
-    });
+  });
 
-    reset.addEventListener("click", () => {
-      prompt.value = "Un robot futuristico con armatura bianca e dettagli blu";
-      buildDemoModel();
-      status.textContent = "Demo ripristinata.";
-      controls.reset();
-    });
+</script>
 
-    download.addEventListener("click", () => {
-      const blob = new Blob([document.documentElement.outerHTML], {type:"text/html"});
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "3d-ai-generator.html";
-      a.click();
-      URL.revokeObjectURL(a.href);
-      status.textContent = "Hai scaricato la pagina demo.";
-    });
-
-    function animate() {
-      requestAnimationFrame(animate);
-      controls.update();
-      renderer.render(scene, camera);
-    }
-    animate();
-  </script>
 </body>
 </html>
