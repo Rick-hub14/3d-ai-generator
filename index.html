@@ -6,14 +6,18 @@
 
   <title>AI 3D Generator</title>
 
-  <!-- Gradio Client -->
   <script type="module">
-    import { Client, handle_file } from "https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js";
+    import {
+      Client,
+      handle_file
+    } from "https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js";
 
-    window.GradioClient = { Client, handle_file };
+    window.GradioClient = {
+      Client,
+      handle_file
+    };
   </script>
 
-  <!-- Model Viewer -->
   <script type="module"
     src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js">
   </script>
@@ -44,7 +48,6 @@
     }
 
     header p {
-      margin: 10px 0 0;
       color: #aeb9d8;
     }
 
@@ -62,11 +65,8 @@
       box-shadow: 0 15px 40px rgba(0,0,0,.25);
     }
 
-    h2 {
-      margin-top: 0;
-    }
-
     .upload-area {
+      display: block;
       border: 2px dashed #536aa8;
       border-radius: 15px;
       padding: 35px 20px;
@@ -83,7 +83,7 @@
       display: none;
     }
 
-    .button {
+    button {
       width: 100%;
       border: none;
       border-radius: 12px;
@@ -96,11 +96,7 @@
       margin-top: 10px;
     }
 
-    .button:hover {
-      background: #4968dd;
-    }
-
-    .button:disabled {
+    button:disabled {
       background: #39435f;
       cursor: not-allowed;
     }
@@ -120,7 +116,7 @@
       background: #0c1328;
       color: #b9c5e6;
       text-align: center;
-      min-height: 50px;
+      line-height: 1.5;
     }
 
     #result {
@@ -170,7 +166,7 @@
     <h2>Genera il tuo modello 3D</h2>
 
     <p>
-      Carica un'immagine di un oggetto e prova a trasformarla
+      Carica un'immagine di un oggetto e trasformala
       automaticamente in un modello 3D.
     </p>
 
@@ -183,12 +179,11 @@
     <input
       id="imageInput"
       type="file"
-      accept="image/png,image/jpeg,image/webp"
-    >
+      accept="image/png,image/jpeg,image/webp">
 
     <img id="preview" alt="Anteprima">
 
-    <button id="generateButton" class="button" disabled>
+    <button id="generateButton" disabled>
       🚀 Genera modello 3D
     </button>
 
@@ -198,7 +193,7 @@
 
     <div id="result">
 
-      <h2>🎉 Modello 3D</h2>
+      <h2>🎉 Il tuo modello 3D</h2>
 
       <model-viewer
         id="viewer"
@@ -218,8 +213,8 @@
     </div>
 
     <p class="small">
-      Nota: questa è una versione di prova. Il modello 3D viene generato
-      tramite il servizio TripoSR di Hugging Face.
+      Generazione tramite TripoSR.
+      La generazione può richiedere alcuni minuti.
     </p>
 
   </div>
@@ -228,15 +223,29 @@
 
 <script type="module">
 
-  const imageInput = document.getElementById("imageInput");
-  const preview = document.getElementById("preview");
-  const generateButton = document.getElementById("generateButton");
-  const status = document.getElementById("status");
-  const result = document.getElementById("result");
-  const viewer = document.getElementById("viewer");
-  const downloadButton = document.getElementById("downloadButton");
+  const imageInput =
+    document.getElementById("imageInput");
+
+  const preview =
+    document.getElementById("preview");
+
+  const generateButton =
+    document.getElementById("generateButton");
+
+  const status =
+    document.getElementById("status");
+
+  const result =
+    document.getElementById("result");
+
+  const viewer =
+    document.getElementById("viewer");
+
+  const downloadButton =
+    document.getElementById("downloadButton");
 
   let selectedFile = null;
+
 
   imageInput.addEventListener("change", () => {
 
@@ -253,10 +262,12 @@
 
     generateButton.disabled = false;
 
-    status.innerHTML =
-      "✅ Immagine caricata. Premi <strong>Genera modello 3D</strong>.";
-
     result.style.display = "none";
+
+    status.innerHTML =
+      "✅ Immagine caricata.<br>" +
+      "Premi <strong>Genera modello 3D</strong>.";
+
   });
 
 
@@ -267,55 +278,151 @@
     }
 
     generateButton.disabled = true;
-
-    status.innerHTML =
-      "⏳ Connessione a TripoSR...<br>La generazione potrebbe richiedere alcuni minuti.";
-
     result.style.display = "none";
 
     try {
 
-      const { Client, handle_file } = window.GradioClient;
-
-      /*
-       * Ci colleghiamo allo Space pubblico ufficiale di TripoSR.
-       */
-      const app = await Client.connect("stabilityai/TripoSR");
+      const { Client, handle_file } =
+        window.GradioClient;
 
       status.innerHTML =
-        "⏳ Immagine inviata a TripoSR...<br>Attendi la generazione del modello.";
+        "🔌 Connessione a TripoSR...";
 
-      /*
-       * Recuperiamo automaticamente le informazioni sulle API.
-       * Questo ci permette di controllare gli endpoint disponibili.
-       */
-      const apiInfo = await app.view_api();
+      const app =
+        await Client.connect("stabilityai/TripoSR");
 
-      console.log("TripoSR API:", apiInfo);
 
-      /*
-       * Per ora mostriamo le informazioni nel riquadro.
-       * Nel prossimo passaggio collegheremo l'endpoint di generazione
-       * esatto restituito dallo Space.
-       */
       status.innerHTML =
-        "✅ Connessione a TripoSR riuscita!<br><br>" +
-        "La pagina ha trovato correttamente le API del modello.<br>" +
-        "Controlla la console del browser per i dettagli.";
+        "📤 Invio dell'immagine a TripoSR...";
 
-      generateButton.disabled = false;
+
+      /*
+       * STEP 1
+       * Preprocess dell'immagine
+       */
+
+      const preprocessResult =
+        await app.predict("/preprocess", [
+
+          await handle_file(selectedFile),
+
+          true,
+
+          0.85
+
+        ]);
+
+
+      console.log(
+        "Risultato preprocess:",
+        preprocessResult
+      );
+
+
+      const processedImage =
+        preprocessResult.data[0];
+
+
+      status.innerHTML =
+        "🧠 TripoSR sta creando il modello 3D...<br>" +
+        "Attendi qualche minuto.";
+
+
+      /*
+       * STEP 2
+       * Generazione del modello
+       */
+
+      const generateResult =
+        await app.predict("/generate", [
+
+          processedImage,
+
+          256
+
+        ]);
+
+
+      console.log(
+        "Risultato generazione:",
+        generateResult
+      );
+
+
+      /*
+       * TripoSR restituisce:
+       *
+       * data[0] = OBJ
+       * data[1] = GLB
+       */
+
+      const objFile =
+        generateResult.data[0];
+
+      const glbFile =
+        generateResult.data[1];
+
+
+      if (!glbFile) {
+        throw new Error(
+          "TripoSR non ha restituito il file GLB."
+        );
+      }
+
+
+      /*
+       * URL del GLB
+       */
+
+      const glbUrl =
+        glbFile.url ||
+        glbFile.path ||
+        glbFile;
+
+
+      if (!glbUrl) {
+        throw new Error(
+          "Impossibile ottenere l'URL del modello GLB."
+        );
+      }
+
+
+      /*
+       * Mostra il modello
+       */
+
+      viewer.src = glbUrl;
+
+      downloadButton.href = glbUrl;
+
+      result.style.display = "block";
+
+
+      status.innerHTML =
+        "🎉 <strong>Modello 3D creato!</strong><br>" +
+        "Puoi ruotarlo con il mouse e scaricarlo.";
+
 
     } catch (error) {
 
-      console.error(error);
+      console.error(
+        "Errore TripoSR:",
+        error
+      );
 
       status.innerHTML =
-        "❌ Si è verificato un errore.<br><br>" +
+        "❌ <strong>Errore durante la generazione.</strong><br><br>" +
         "<small>" +
-        (error.message || error) +
+        (
+          error?.message ||
+          String(error)
+        ) +
         "</small>";
 
+    } finally {
+
       generateButton.disabled = false;
+
     }
 
   });
